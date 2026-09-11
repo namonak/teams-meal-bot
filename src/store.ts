@@ -1,0 +1,30 @@
+import { DatabaseSync } from 'node:sqlite';
+import type { Meal } from './domain.js';
+
+export type ResponseStatus = 'join' | 'separate' | 'undecided';
+export type ResponseInput = { surveyId: number; memberId: string; memberName: string; status: ResponseStatus; menu?: string | null };
+export type StoredResponse = Omit<ResponseInput, 'surveyId'> & { menu: string | null };
+
+export class Store {
+  private constructor(private db: DatabaseSync) {
+    db.exec(`CREATE TABLE IF NOT EXISTS conversation (id INTEGER PRIMARY KEY, teams_conversation_id TEXT UNIQUE NOT NULL);
+      CREATE TABLE IF NOT EXISTS survey (id INTEGER PRIMARY KEY, date_kst TEXT NOT NULL, meal_type TEXT NOT NULL, message_id TEXT NOT NULL, UNIQUE(date_kst, meal_type));
+      CREATE TABLE IF NOT EXISTS response (survey_id INTEGER NOT NULL, member_id TEXT NOT NULL, member_name TEXT NOT NULL, status TEXT NOT NULL, menu TEXT, PRIMARY KEY(survey_id, member_id));`);
+  }
+  static open(path: string) { return new Store(new DatabaseSync(path)); }
+  activateConversation(id: string) {
+    if (this.db.prepare('SELECT 1 FROM conversation LIMIT 1').get()) return false;
+    this.db.prepare('INSERT INTO conversation (teams_conversation_id) VALUES (?)').run(id); return true;
+  }
+  createSurvey(date: string, meal: Meal, messageId: string) {
+    const result = this.db.prepare('INSERT INTO survey (date_kst, meal_type, message_id) VALUES (?, ?, ?)').run(date, meal, messageId);
+    return { id: Number(result.lastInsertRowid), date, meal, messageId };
+  }
+  upsertResponse(input: ResponseInput) {
+    const menu = input.status === 'join' ? input.menu?.trim() || null : null;
+    this.db.prepare(`INSERT INTO response VALUES (?, ?, ?, ?, ?) ON CONFLICT(survey_id, member_id) DO UPDATE SET member_name=excluded.member_name,status=excluded.status,menu=excluded.menu`).run(input.surveyId, input.memberId, input.memberName, input.status, menu);
+  }
+  listResponses(surveyId: number): StoredResponse[] {
+    return (this.db.prepare('SELECT member_id AS memberId, member_name AS memberName, status, menu FROM response WHERE survey_id=? ORDER BY member_name').all(surveyId) as StoredResponse[]).map((row) => ({ ...row }));
+  }
+}

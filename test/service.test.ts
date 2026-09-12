@@ -11,6 +11,7 @@ test('only the active chat can change a schedule and empty mention returns help'
   assert.match(service.mention('chat-2', '설정 점심 11:30'), /활성 대화방/);
   assert.match(service.mention('chat-1', '설정 점심 11:30'), /11:30/);
   assert.equal(store.getSchedule('lunch'), '11:30');
+  assert.equal(store.listScheduleChanges().length, 1);
 });
 
 test('accepts the latest response only for an open survey in the active chat', () => {

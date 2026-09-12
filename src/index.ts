@@ -15,7 +15,7 @@ class MealBot extends ActivityHandler {
     });
     this.onMessage(async (context, next) => {
       const conversationId = context.activity.conversation?.id;
-      if (conversationId) await context.sendActivity(this.service.mention(conversationId, context.activity.text ?? ''));
+      if (conversationId) await context.sendActivity(this.service.mention(conversationId, context.activity.text ?? '', context.activity.from?.id, context.activity.from?.name));
       await next();
     });
   }

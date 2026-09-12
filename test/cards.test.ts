@@ -12,3 +12,8 @@ test('builds a card with response choices and grouped menu summary', () => {
   assert.match(JSON.stringify(card), /국밥 2/);
   assert.match(JSON.stringify(card), /같이 먹어요/);
 });
+
+test('removes the submit action from a closed survey card', () => {
+  const card = buildSurveyCard('점심', [], 1, true);
+  assert.deepEqual(card.actions, []);
+});

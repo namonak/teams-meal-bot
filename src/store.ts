@@ -4,12 +4,12 @@ import type { Meal } from './domain.js';
 export type ResponseStatus = 'join' | 'separate' | 'undecided';
 export type ResponseInput = { surveyId: number; memberId: string; memberName: string; status: ResponseStatus; menu?: string | null };
 export type StoredResponse = Omit<ResponseInput, 'surveyId'> & { menu: string | null };
-export type Survey = { id: number; date: string; meal: Meal; messageId: string };
+export type Survey = { id: number; date: string; meal: Meal; messageId: string; status: 'open' | 'closed' };
 
 export class Store {
   private constructor(private db: DatabaseSync) {
     db.exec(`CREATE TABLE IF NOT EXISTS conversation (id INTEGER PRIMARY KEY, teams_conversation_id TEXT UNIQUE NOT NULL, reference_json TEXT);
-      CREATE TABLE IF NOT EXISTS survey (id INTEGER PRIMARY KEY, date_kst TEXT NOT NULL, meal_type TEXT NOT NULL, message_id TEXT NOT NULL, UNIQUE(date_kst, meal_type));
+      CREATE TABLE IF NOT EXISTS survey (id INTEGER PRIMARY KEY, date_kst TEXT NOT NULL, meal_type TEXT NOT NULL, message_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'open', UNIQUE(date_kst, meal_type));
       CREATE TABLE IF NOT EXISTS response (survey_id INTEGER NOT NULL, member_id TEXT NOT NULL, member_name TEXT NOT NULL, status TEXT NOT NULL, menu TEXT, PRIMARY KEY(survey_id, member_id));
       CREATE TABLE IF NOT EXISTS schedule (meal_type TEXT PRIMARY KEY, time_kst TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS schedule_change (meal_type TEXT NOT NULL, old_time TEXT NOT NULL, new_time TEXT NOT NULL, actor_id TEXT NOT NULL, actor_name TEXT NOT NULL, changed_at TEXT NOT NULL);`);
@@ -32,14 +32,16 @@ export class Store {
   listScheduleChanges() { return this.db.prepare('SELECT * FROM schedule_change ORDER BY rowid').all(); }
   createSurvey(date: string, meal: Meal, messageId: string) {
     const result = this.db.prepare('INSERT INTO survey (date_kst, meal_type, message_id) VALUES (?, ?, ?)').run(date, meal, messageId);
-    return { id: Number(result.lastInsertRowid), date, meal, messageId };
+    return { id: Number(result.lastInsertRowid), date, meal, messageId, status: 'open' as const };
   }
   updateSurveyMessage(id: number, messageId: string) { this.db.prepare('UPDATE survey SET message_id=? WHERE id=?').run(messageId, id); }
   hasSurvey(id: number) { return Boolean(this.db.prepare('SELECT 1 FROM survey WHERE id=?').get(id)); }
   getSurvey(id: number): Survey | undefined {
-    const row = this.db.prepare('SELECT id, date_kst AS date, meal_type AS meal, message_id AS messageId FROM survey WHERE id=?').get(id) as Survey | undefined;
+    const row = this.db.prepare('SELECT id, date_kst AS date, meal_type AS meal, message_id AS messageId, status FROM survey WHERE id=?').get(id) as Survey | undefined;
     return row && { ...row };
   }
+  listOpenSurveys() { return (this.db.prepare("SELECT id, date_kst AS date, meal_type AS meal, message_id AS messageId, status FROM survey WHERE status='open'").all() as Survey[]).map((survey) => ({ ...survey })); }
+  closeSurvey(id: number) { this.db.prepare("UPDATE survey SET status='closed' WHERE id=?").run(id); }
   upsertResponse(input: ResponseInput) {
     const menu = input.status === 'join' ? input.menu?.trim() || null : null;
     this.db.prepare(`INSERT INTO response VALUES (?, ?, ?, ?, ?) ON CONFLICT(survey_id, member_id) DO UPDATE SET member_name=excluded.member_name,status=excluded.status,menu=excluded.menu`).run(input.surveyId, input.memberId, input.memberName, input.status, menu);

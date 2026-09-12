@@ -1,6 +1,7 @@
 import express from 'express';
 import { ActivityHandler, CardFactory, CloudAdapter, authorizeJWT, loadAuthConfigFromEnv } from '@microsoft/agents-hosting';
 import { buildSurveyCard } from './cards.js';
+import { isOpen } from './domain.js';
 import { dueMeals } from './scheduler.js';
 import { MealService } from './service.js';
 import { Store } from './store.js';
@@ -50,6 +51,14 @@ export function createApp() {
     setInterval(async () => {
       const reference = store.conversationReference();
       if (!reference) return;
+      for (const survey of store.listOpenSurveys()) {
+        if (!isOpen(survey.meal, new Date())) {
+          await adapter.continueConversation(appId, reference, async (context) => {
+            await context.updateActivity({ id: survey.messageId, type: 'message', conversation: context.activity.conversation, attachments: [CardFactory.adaptiveCard(buildSurveyCard(survey.meal === 'lunch' ? '점심' : '저녁', store.listResponses(survey.id), survey.id, true))] } as never);
+          });
+          store.closeSurvey(survey.id);
+        }
+      }
       for (const meal of dueMeals(new Date(), { lunch: store.getSchedule('lunch'), dinner: store.getSchedule('dinner') })) {
         const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
         try {

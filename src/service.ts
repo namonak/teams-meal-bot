@@ -13,7 +13,7 @@ export class MealService {
   }
   submit(conversationId: string, surveyId: number, memberId: string, memberName: string, status: ResponseStatus, menu?: string, now = new Date()) {
     const survey = this.store.getSurvey(surveyId);
-    if (this.store.activeConversation() !== conversationId || !survey || !isOpen(survey.meal, now)) return false;
+    if (this.store.activeConversation() !== conversationId || !survey || survey.status !== 'open' || !isOpen(survey.meal, now)) return false;
     this.store.upsertResponse({ surveyId, memberId, memberName, status, menu });
     return true;
   }

@@ -26,6 +26,10 @@ class MealBot extends ActivityHandler {
     const accepted = invoke.action?.verb === 'mealResponse' && Number.isInteger(surveyId) && ['join', 'separate', 'undecided'].includes(status)
       && context.activity.conversation?.id && context.activity.from?.id
       && this.service.submit(context.activity.conversation.id, surveyId, context.activity.from.id, context.activity.from.name ?? context.activity.from.id, status, data.menu);
+    if (accepted) {
+      const survey = this.store.getSurvey(surveyId)!;
+      await context.updateActivity({ id: survey.messageId, type: 'message', conversation: context.activity.conversation, attachments: [CardFactory.adaptiveCard(buildSurveyCard(survey.meal === 'lunch' ? '점심' : '저녁', this.store.listResponses(survey.id), survey.id))] } as never);
+    }
     return { statusCode: accepted ? 200 : 400, type: 'application/vnd.microsoft.card.adaptive', value: {} };
   }
 }

@@ -7,7 +7,7 @@ export type StoredResponse = Omit<ResponseInput, 'surveyId'> & { menu: string | 
 
 export class Store {
   private constructor(private db: DatabaseSync) {
-    db.exec(`CREATE TABLE IF NOT EXISTS conversation (id INTEGER PRIMARY KEY, teams_conversation_id TEXT UNIQUE NOT NULL);
+    db.exec(`CREATE TABLE IF NOT EXISTS conversation (id INTEGER PRIMARY KEY, teams_conversation_id TEXT UNIQUE NOT NULL, reference_json TEXT);
       CREATE TABLE IF NOT EXISTS survey (id INTEGER PRIMARY KEY, date_kst TEXT NOT NULL, meal_type TEXT NOT NULL, message_id TEXT NOT NULL, UNIQUE(date_kst, meal_type));
       CREATE TABLE IF NOT EXISTS response (survey_id INTEGER NOT NULL, member_id TEXT NOT NULL, member_name TEXT NOT NULL, status TEXT NOT NULL, menu TEXT, PRIMARY KEY(survey_id, member_id));
       CREATE TABLE IF NOT EXISTS schedule (meal_type TEXT PRIMARY KEY, time_kst TEXT NOT NULL);`);
@@ -15,17 +15,19 @@ export class Store {
     db.prepare('INSERT OR IGNORE INTO schedule VALUES (?, ?)').run('dinner', '17:45');
   }
   static open(path: string) { return new Store(new DatabaseSync(path)); }
-  activateConversation(id: string) {
+  activateConversation(id: string, reference?: unknown) {
     if (this.db.prepare('SELECT 1 FROM conversation LIMIT 1').get()) return false;
-    this.db.prepare('INSERT INTO conversation (teams_conversation_id) VALUES (?)').run(id); return true;
+    this.db.prepare('INSERT INTO conversation (teams_conversation_id, reference_json) VALUES (?, ?)').run(id, reference ? JSON.stringify(reference) : null); return true;
   }
   activeConversation() { return (this.db.prepare('SELECT teams_conversation_id AS id FROM conversation LIMIT 1').get() as { id: string } | undefined)?.id; }
+  conversationReference() { const row = this.db.prepare('SELECT reference_json AS reference FROM conversation LIMIT 1').get() as { reference: string | null } | undefined; return row?.reference ? JSON.parse(row.reference) : undefined; }
   getSchedule(meal: Meal) { return (this.db.prepare('SELECT time_kst AS time FROM schedule WHERE meal_type=?').get(meal) as { time: string }).time; }
   setSchedule(meal: Meal, time: string) { this.db.prepare('UPDATE schedule SET time_kst=? WHERE meal_type=?').run(time, meal); }
   createSurvey(date: string, meal: Meal, messageId: string) {
     const result = this.db.prepare('INSERT INTO survey (date_kst, meal_type, message_id) VALUES (?, ?, ?)').run(date, meal, messageId);
     return { id: Number(result.lastInsertRowid), date, meal, messageId };
   }
+  updateSurveyMessage(id: number, messageId: string) { this.db.prepare('UPDATE survey SET message_id=? WHERE id=?').run(messageId, id); }
   hasSurvey(id: number) { return Boolean(this.db.prepare('SELECT 1 FROM survey WHERE id=?').get(id)); }
   upsertResponse(input: ResponseInput) {
     const menu = input.status === 'join' ? input.menu?.trim() || null : null;

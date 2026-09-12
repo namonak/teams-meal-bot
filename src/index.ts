@@ -19,6 +19,15 @@ class MealBot extends ActivityHandler {
       await next();
     });
   }
+  protected override async onAdaptiveCardInvoke(context: any, invoke: any) {
+    const data = invoke.action?.data ?? {};
+    const surveyId = Number(data.surveyId);
+    const status = data.status;
+    const accepted = invoke.action?.verb === 'mealResponse' && Number.isInteger(surveyId) && ['join', 'separate', 'undecided'].includes(status)
+      && context.activity.conversation?.id && context.activity.from?.id
+      && this.service.submit(context.activity.conversation.id, surveyId, context.activity.from.id, context.activity.from.name ?? context.activity.from.id, status, data.menu);
+    return { statusCode: accepted ? 200 : 400, type: 'application/vnd.microsoft.card.adaptive', value: {} };
+  }
 }
 
 export function createApp() {
@@ -42,7 +51,7 @@ export function createApp() {
         try {
           const survey = store.createSurvey(date, meal, '');
           await adapter.continueConversation(appId, reference, async (context) => {
-            const sent = await context.sendActivity({ type: 'message', attachments: [CardFactory.adaptiveCard(buildSurveyCard(meal === 'lunch' ? '점심' : '저녁', []))] } as never);
+            const sent = await context.sendActivity({ type: 'message', attachments: [CardFactory.adaptiveCard(buildSurveyCard(meal === 'lunch' ? '점심' : '저녁', [], survey.id))] } as never);
             if (sent?.id) store.updateSurveyMessage(survey.id, sent.id);
           });
         } catch { /* duplicate scheduler tick: SQLite uniqueness is the guard */ }

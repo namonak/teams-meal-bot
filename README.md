@@ -4,11 +4,28 @@
 
 ## 서버 배포
 
-1. `cp .env.example .env` 후 Microsoft 앱 값을 채웁니다.
+1. `cp .env.example .env` 후 Microsoft 앱 값을 채웁니다. `.env`는 절대 커밋하지 않습니다.
 2. 기존 HTTPS 프록시에서 `meal-bot.joannes.kr`의 `/api/messages`와 `/healthz`를 `127.0.0.1:3978`로 전달합니다.
 3. `docker compose up -d --build`를 실행합니다.
 4. `curl https://meal-bot.joannes.kr/healthz`가 `{"ok":true}`를 반환하는지 확인합니다.
 
+Nginx 예시는 다음과 같습니다.
+
+```nginx
+location / {
+  proxy_pass http://127.0.0.1:3978;
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
 ## Teams 등록
 
 Teams Developer CLI로 앱 등록 시 endpoint를 `https://meal-bot.joannes.kr/api/messages`로 지정합니다. `appPackage/manifest.json`의 `{{MICROSOFT_APP_ID}}`를 생성된 앱 ID로 바꾸고, manifest와 PNG 아이콘 두 개를 ZIP으로 묶어 대상 단체 대화방에 사용자 지정 앱으로 추가합니다.
+
+```bash
+cd appPackage
+zip -r ../team-meal-bot.zip manifest.json color.png outline.png
+```
+
+앱을 추가한 뒤 `@밥부장`을 보내 사용법이 보이면 설치가 완료된 것입니다. 실제 계정/테넌트 비밀값은 이 저장소에 넣지 않습니다.

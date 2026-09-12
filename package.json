@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@microsoft/agents-hosting": "^1.8.1",
-    "@microsoft/agents-hosting-teams": "^0.4.3",
     "express": "^5.2.1"
   }
 }

@@ -1,0 +1,14 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      PORT: 3978
+      DATABASE_PATH: /data/team-meal-bot.sqlite
+    ports:
+      - "127.0.0.1:3978:3978"
+    volumes:
+      - meal-data:/data
+    restart: unless-stopped
+volumes:
+  meal-data:

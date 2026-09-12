@@ -18,7 +18,15 @@ test('accepts the latest response only for an open survey in the active chat', (
   store.activateConversation('chat-1');
   const survey = store.createSurvey('2026-09-12', 'lunch', 'message-1');
   const service = new MealService(store);
-  assert.equal(service.submit('chat-1', survey.id, 'u1', 'Kim', 'join', '국밥'), true);
+  assert.equal(service.submit('chat-1', survey.id, 'u1', 'Kim', 'join', '국밥', new Date('2026-09-12T03:00:00Z')), true);
   assert.deepEqual(store.listResponses(survey.id), [{ memberId: 'u1', memberName: 'Kim', status: 'join', menu: '국밥' }]);
   assert.equal(service.submit('chat-2', survey.id, 'u2', 'Lee', 'join', '돈까스'), false);
+});
+
+test('rejects a response after the meal closing time', () => {
+  const store = Store.open(':memory:');
+  store.activateConversation('chat-1');
+  const survey = store.createSurvey('2026-09-12', 'lunch', 'message-1');
+  const service = new MealService(store);
+  assert.equal(service.submit('chat-1', survey.id, 'u1', 'Kim', 'join', '국밥', new Date('2026-09-12T05:00:00Z')), false);
 });

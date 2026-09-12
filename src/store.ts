@@ -4,6 +4,7 @@ import type { Meal } from './domain.js';
 export type ResponseStatus = 'join' | 'separate' | 'undecided';
 export type ResponseInput = { surveyId: number; memberId: string; memberName: string; status: ResponseStatus; menu?: string | null };
 export type StoredResponse = Omit<ResponseInput, 'surveyId'> & { menu: string | null };
+export type Survey = { id: number; date: string; meal: Meal; messageId: string };
 
 export class Store {
   private constructor(private db: DatabaseSync) {
@@ -29,6 +30,10 @@ export class Store {
   }
   updateSurveyMessage(id: number, messageId: string) { this.db.prepare('UPDATE survey SET message_id=? WHERE id=?').run(messageId, id); }
   hasSurvey(id: number) { return Boolean(this.db.prepare('SELECT 1 FROM survey WHERE id=?').get(id)); }
+  getSurvey(id: number): Survey | undefined {
+    const row = this.db.prepare('SELECT id, date_kst AS date, meal_type AS meal, message_id AS messageId FROM survey WHERE id=?').get(id) as Survey | undefined;
+    return row && { ...row };
+  }
   upsertResponse(input: ResponseInput) {
     const menu = input.status === 'join' ? input.menu?.trim() || null : null;
     this.db.prepare(`INSERT INTO response VALUES (?, ?, ?, ?, ?) ON CONFLICT(survey_id, member_id) DO UPDATE SET member_name=excluded.member_name,status=excluded.status,menu=excluded.menu`).run(input.surveyId, input.memberId, input.memberName, input.status, menu);

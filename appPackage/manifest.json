@@ -6,6 +6,7 @@
   "packageName": "kr.joannes.teammealbot",
   "developer": { "name": "Joannes", "websiteUrl": "https://joannes.kr", "privacyUrl": "https://joannes.kr/privacy", "termsOfUseUrl": "https://joannes.kr/terms" },
   "name": { "short": "밥부장", "full": "팀 식사 설문 봇" },
+  "icons": { "color": "color.png", "outline": "outline.png" },
   "description": { "short": "팀 식사 여부를 묻고 메뉴를 취합합니다.", "full": "단체 대화방에서 점심과 저녁 식사 참여 여부 및 메뉴를 취합합니다." },
   "bots": [{ "botId": "{{MICROSOFT_APP_ID}}", "scopes": ["groupchat"], "supportsFiles": false, "isNotificationOnly": false }],
   "validDomains": ["meal-bot.joannes.kr"]

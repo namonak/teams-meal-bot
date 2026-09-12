@@ -9,13 +9,19 @@ export class Store {
   private constructor(private db: DatabaseSync) {
     db.exec(`CREATE TABLE IF NOT EXISTS conversation (id INTEGER PRIMARY KEY, teams_conversation_id TEXT UNIQUE NOT NULL);
       CREATE TABLE IF NOT EXISTS survey (id INTEGER PRIMARY KEY, date_kst TEXT NOT NULL, meal_type TEXT NOT NULL, message_id TEXT NOT NULL, UNIQUE(date_kst, meal_type));
-      CREATE TABLE IF NOT EXISTS response (survey_id INTEGER NOT NULL, member_id TEXT NOT NULL, member_name TEXT NOT NULL, status TEXT NOT NULL, menu TEXT, PRIMARY KEY(survey_id, member_id));`);
+      CREATE TABLE IF NOT EXISTS response (survey_id INTEGER NOT NULL, member_id TEXT NOT NULL, member_name TEXT NOT NULL, status TEXT NOT NULL, menu TEXT, PRIMARY KEY(survey_id, member_id));
+      CREATE TABLE IF NOT EXISTS schedule (meal_type TEXT PRIMARY KEY, time_kst TEXT NOT NULL);`);
+    db.prepare('INSERT OR IGNORE INTO schedule VALUES (?, ?)').run('lunch', '11:15');
+    db.prepare('INSERT OR IGNORE INTO schedule VALUES (?, ?)').run('dinner', '17:45');
   }
   static open(path: string) { return new Store(new DatabaseSync(path)); }
   activateConversation(id: string) {
     if (this.db.prepare('SELECT 1 FROM conversation LIMIT 1').get()) return false;
     this.db.prepare('INSERT INTO conversation (teams_conversation_id) VALUES (?)').run(id); return true;
   }
+  activeConversation() { return (this.db.prepare('SELECT teams_conversation_id AS id FROM conversation LIMIT 1').get() as { id: string } | undefined)?.id; }
+  getSchedule(meal: Meal) { return (this.db.prepare('SELECT time_kst AS time FROM schedule WHERE meal_type=?').get(meal) as { time: string }).time; }
+  setSchedule(meal: Meal, time: string) { this.db.prepare('UPDATE schedule SET time_kst=? WHERE meal_type=?').run(time, meal); }
   createSurvey(date: string, meal: Meal, messageId: string) {
     const result = this.db.prepare('INSERT INTO survey (date_kst, meal_type, message_id) VALUES (?, ?, ?)').run(date, meal, messageId);
     return { id: Number(result.lastInsertRowid), date, meal, messageId };

@@ -8,8 +8,14 @@
     "start": "tsx src/index.ts"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^24.0.0",
     "tsx": "^4.20.0",
     "typescript": "^5.8.0"
+  },
+  "dependencies": {
+    "@microsoft/agents-hosting": "^1.8.1",
+    "@microsoft/agents-hosting-teams": "^0.4.3",
+    "express": "^5.2.1"
   }
 }

@@ -26,6 +26,7 @@ export class Store {
     const result = this.db.prepare('INSERT INTO survey (date_kst, meal_type, message_id) VALUES (?, ?, ?)').run(date, meal, messageId);
     return { id: Number(result.lastInsertRowid), date, meal, messageId };
   }
+  hasSurvey(id: number) { return Boolean(this.db.prepare('SELECT 1 FROM survey WHERE id=?').get(id)); }
   upsertResponse(input: ResponseInput) {
     const menu = input.status === 'join' ? input.menu?.trim() || null : null;
     this.db.prepare(`INSERT INTO response VALUES (?, ?, ?, ?, ?) ON CONFLICT(survey_id, member_id) DO UPDATE SET member_name=excluded.member_name,status=excluded.status,menu=excluded.menu`).run(input.surveyId, input.memberId, input.memberName, input.status, menu);

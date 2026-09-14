@@ -5,6 +5,8 @@ import { isOpen, parseCommand } from '../src/domain.js';
 test('parses help, status, and schedule commands', () => {
   assert.deepEqual(parseCommand(''), { type: 'help' });
   assert.deepEqual(parseCommand('현황'), { type: 'status' });
+  assert.deepEqual(parseCommand('<at>밥부장</at> 현황'), { type: 'status' });
+  assert.deepEqual(parseCommand('밥부장 설정 점심 11:30'), { type: 'schedule', meal: 'lunch', time: '11:30' });
   assert.deepEqual(parseCommand('설정 점심 11:30'), { type: 'schedule', meal: 'lunch', time: '11:30' });
   assert.deepEqual(parseCommand('설정 저녁 25:00'), { type: 'invalid' });
 });

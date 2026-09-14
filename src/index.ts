@@ -18,6 +18,7 @@ class MealBot extends ActivityHandler {
       const conversationId = context.activity.conversation?.id;
       if (conversationId) {
         this.store.activateConversation(conversationId, context.activity.getConversationReference());
+        context.activity.removeRecipientMention();
         await context.sendActivity(this.service.mention(conversationId, context.activity.text ?? '', context.activity.from?.id, context.activity.from?.name));
       }
       await next();

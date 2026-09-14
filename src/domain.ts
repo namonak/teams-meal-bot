@@ -9,7 +9,7 @@ const mealMap: Record<string, Meal> = { 점심: 'lunch', 저녁: 'dinner' };
 const validTime = (time: string) => /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 
 export function parseCommand(text: string): Command {
-  const words = text.trim().split(/\s+/).filter(Boolean);
+  const words = text.replace(/^<at>.*?<\/at>\s*/i, '').replace(/^밥부장\s*/, '').trim().split(/\s+/).filter(Boolean);
   if (!words.length) return { type: 'help' };
   if (words.length === 1 && words[0] === '현황') return { type: 'status' };
   if (words.length === 3 && words[0] === '설정' && mealMap[words[1]] && validTime(words[2])) {

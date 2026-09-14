@@ -30,11 +30,11 @@
    | `MicrosoftAppId` | Teams 앱 등록 시 발급된 앱 ID |
    | `MicrosoftAppPassword` | 앱 클라이언트 비밀값 |
    | `MicrosoftAppTenantId` | Microsoft 365 테넌트 ID |
-   | `PUBLIC_BASE_URL` | `https://meal-bot.joannes.kr` |
+   | `PUBLIC_BASE_URL` | `https://meal-bot.namonak.dev` |
    | `DATABASE_PATH` | Docker에서는 `/data/team-meal-bot.sqlite` |
-2. 기존 HTTPS 프록시에서 `meal-bot.joannes.kr`의 `/api/messages`와 `/healthz`를 `127.0.0.1:3978`로 전달합니다.
+2. 기존 HTTPS 프록시에서 `meal-bot.namonak.dev`의 `/api/messages`와 `/healthz`를 `127.0.0.1:3978`로 전달합니다.
 3. `docker compose up -d --build`를 실행합니다.
-4. `curl https://meal-bot.joannes.kr/healthz`가 `{"ok":true}`를 반환하는지 확인합니다.
+4. `curl https://meal-bot.namonak.dev/healthz`가 `{"ok":true}`를 반환하는지 확인합니다.
 
 Nginx 예시는 다음과 같습니다.
 
@@ -57,7 +57,7 @@ sudo systemctl status team-meal-bot
 
 ## Teams 등록
 
-Teams Developer CLI로 앱 등록 시 endpoint를 `https://meal-bot.joannes.kr/api/messages`로 지정합니다. `.env`의 `MicrosoftAppId`를 채운 뒤 아래 명령으로 manifest와 PNG 아이콘 두 개만 담은 ZIP을 만듭니다. 앱 ID는 ZIP에 들어가지만, 비밀값은 들어가지 않습니다.
+Teams Developer CLI로 앱 등록 시 endpoint를 `https://meal-bot.namonak.dev/api/messages`로 지정합니다. `.env`의 `MicrosoftAppId`를 채운 뒤 아래 명령으로 manifest와 PNG 아이콘 두 개만 담은 ZIP을 만듭니다. 앱 ID는 ZIP에 들어가지만, 비밀값은 들어가지 않습니다.
 
 프로젝트 최상단(`.env`, `appPackage` 폴더가 보이는 위치)에서 실행합니다. NAS의 `/volume1/docker/team-meal-bot` 또는 로컬 PC의 저장소 경로 모두 가능합니다.
 
@@ -81,7 +81,7 @@ bash scripts/package-teams-app.sh
 
 ## 확인 목록
 
-1. `https://meal-bot.joannes.kr/healthz`가 `{"ok":true}`를 반환한다.
+1. `https://meal-bot.namonak.dev/healthz`가 `{"ok":true}`를 반환한다.
 2. 대상 단체 대화방에 앱을 추가한다.
 3. `@밥부장`으로 도움말이 보이는지 확인한다.
 4. `@밥부장 설정 점심 11:30`으로 일정 변경이 반영되는지 확인한다.

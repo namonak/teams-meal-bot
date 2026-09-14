@@ -1,5 +1,5 @@
 import express from 'express';
-import { ActivityHandler, CardFactory, CloudAdapter, authorizeJWT, loadAuthConfigFromEnv } from '@microsoft/agents-hosting';
+import { ActivityHandler, CardFactory, CloudAdapter, authorizeJWT, loadPrevAuthConfigFromEnv } from '@microsoft/agents-hosting';
 import { buildSurveyCard } from './cards.js';
 import { isOpen } from './domain.js';
 import { dueMeals } from './scheduler.js';
@@ -40,7 +40,7 @@ export function createApp() {
   app.get('/healthz', (_request, response) => response.json({ ok: true }));
   const appId = process.env.MicrosoftAppId;
   if (appId && process.env.MicrosoftAppPassword) {
-    const auth = loadAuthConfigFromEnv();
+    const auth = loadPrevAuthConfigFromEnv();
     const adapter = new CloudAdapter(auth);
     const store = Store.open(process.env.DATABASE_PATH ?? '/data/team-meal-bot.sqlite');
     const service = new MealService(store);

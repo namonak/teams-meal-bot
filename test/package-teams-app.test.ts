@@ -21,6 +21,10 @@ test('Teams 패키지에는 치환된 manifest와 아이콘만 담긴다', () =>
     assert.deepEqual(files.stdout.trim().split('\n').sort(), ['color.png', 'manifest.json', 'outline.png']);
     const manifest = spawnSync('unzip', ['-p', path, 'manifest.json'], { encoding: 'utf8' });
     assert.match(manifest.stdout, /test-client-id/);
+    const app = JSON.parse(manifest.stdout);
+    assert.equal(app.packageName, undefined);
+    assert.match(app.accentColor, /^#[0-9A-F]{6}$/i);
+    assert.deepEqual(app.bots[0].scopes, ['groupChat']);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

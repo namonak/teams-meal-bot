@@ -59,8 +59,20 @@ sudo systemctl status team-meal-bot
 
 Teams Developer CLI로 앱 등록 시 endpoint를 `https://meal-bot.joannes.kr/api/messages`로 지정합니다. `.env`의 `MicrosoftAppId`를 채운 뒤 아래 명령으로 manifest와 PNG 아이콘 두 개만 담은 ZIP을 만듭니다. 앱 ID는 ZIP에 들어가지만, 비밀값은 들어가지 않습니다.
 
+프로젝트 최상단(`.env`, `appPackage` 폴더가 보이는 위치)에서 실행합니다. NAS의 `/volume1/docker/team-meal-bot` 또는 로컬 PC의 저장소 경로 모두 가능합니다.
+
 ```bash
+cd /volume1/docker/team-meal-bot
+git pull origin main
 ./scripts/package-teams-app.sh
+```
+
+`Permission denied`가 나오면 실행 권한을 한 번 부여하거나 Bash로 실행합니다.
+
+```bash
+chmod +x scripts/package-teams-app.sh
+# 또는
+bash scripts/package-teams-app.sh
 ```
 
 결과 파일은 한국 시간 기준 `dist/team-meal-bot-YYYYMMDD-HHMMSS.zip` 형식입니다. 이 ZIP을 대상 단체 대화방에 사용자 지정 앱으로 추가합니다.

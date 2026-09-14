@@ -16,7 +16,10 @@ class MealBot extends ActivityHandler {
     });
     this.onMessage(async (context, next) => {
       const conversationId = context.activity.conversation?.id;
-      if (conversationId) await context.sendActivity(this.service.mention(conversationId, context.activity.text ?? '', context.activity.from?.id, context.activity.from?.name));
+      if (conversationId) {
+        this.store.activateConversation(conversationId, context.activity.getConversationReference());
+        await context.sendActivity(this.service.mention(conversationId, context.activity.text ?? '', context.activity.from?.id, context.activity.from?.name));
+      }
       await next();
     });
   }
@@ -49,25 +52,26 @@ export function createApp() {
       await adapter.process(request as never, response as never, async (context) => bot.run(context));
     });
     setInterval(async () => {
-      const reference = store.conversationReference();
-      if (!reference) return;
       for (const survey of store.listOpenSurveys()) {
         if (!isOpen(survey.meal, new Date())) {
-          await adapter.continueConversation(appId, reference, async (context) => {
+          const reference = store.conversationReference(survey.conversationId);
+          if (reference) await adapter.continueConversation(appId, reference, async (context) => {
             await context.updateActivity({ id: survey.messageId, type: 'message', conversation: context.activity.conversation, attachments: [CardFactory.adaptiveCard(buildSurveyCard(survey.meal === 'lunch' ? '점심' : '저녁', store.listResponses(survey.id), survey.id, true))] } as never);
           });
           store.closeSurvey(survey.id);
         }
       }
-      for (const meal of dueMeals(new Date(), { lunch: store.getSchedule('lunch'), dinner: store.getSchedule('dinner') })) {
-        const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
-        try {
-          const survey = store.createSurvey(date, meal, '');
-          await adapter.continueConversation(appId, reference, async (context) => {
-            const sent = await context.sendActivity({ type: 'message', attachments: [CardFactory.adaptiveCard(buildSurveyCard(meal === 'lunch' ? '점심' : '저녁', [], survey.id))] } as never);
-            if (sent?.id) store.updateSurveyMessage(survey.id, sent.id);
-          });
-        } catch { /* duplicate scheduler tick: SQLite uniqueness is the guard */ }
+      for (const { id, reference } of store.conversationReferences()) {
+        for (const meal of dueMeals(new Date(), { lunch: store.getSchedule(id, 'lunch'), dinner: store.getSchedule(id, 'dinner') })) {
+          const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+          try {
+            const survey = store.createSurvey(id, date, meal, '');
+            await adapter.continueConversation(appId, reference, async (context) => {
+              const sent = await context.sendActivity({ type: 'message', attachments: [CardFactory.adaptiveCard(buildSurveyCard(meal === 'lunch' ? '점심' : '저녁', [], survey.id))] } as never);
+              if (sent?.id) store.updateSurveyMessage(survey.id, sent.id);
+            });
+          } catch { /* duplicate scheduler tick: SQLite uniqueness is the guard */ }
+        }
       }
     }, 30_000).unref();
   }

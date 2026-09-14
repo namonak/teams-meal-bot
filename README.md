@@ -57,12 +57,13 @@ sudo systemctl status team-meal-bot
 
 ## Teams 등록
 
-Teams Developer CLI로 앱 등록 시 endpoint를 `https://meal-bot.joannes.kr/api/messages`로 지정합니다. `appPackage/manifest.json`의 `{{MICROSOFT_APP_ID}}`를 생성된 앱 ID로 바꾸고, manifest와 PNG 아이콘 두 개를 ZIP으로 묶어 대상 단체 대화방에 사용자 지정 앱으로 추가합니다.
+Teams Developer CLI로 앱 등록 시 endpoint를 `https://meal-bot.joannes.kr/api/messages`로 지정합니다. `.env`의 `MicrosoftAppId`를 채운 뒤 아래 명령으로 manifest와 PNG 아이콘 두 개만 담은 ZIP을 만듭니다. 앱 ID는 ZIP에 들어가지만, 비밀값은 들어가지 않습니다.
 
 ```bash
-cd appPackage
-zip -r ../team-meal-bot.zip manifest.json color.png outline.png
+./scripts/package-teams-app.sh
 ```
+
+결과 파일은 한국 시간 기준 `dist/team-meal-bot-YYYYMMDD-HHMMSS.zip` 형식입니다. 이 ZIP을 대상 단체 대화방에 사용자 지정 앱으로 추가합니다.
 
 앱을 추가한 뒤 `@밥부장`을 보내 사용법이 보이면 설치가 완료된 것입니다. 실제 계정/테넌트 비밀값은 이 저장소에 넣지 않습니다.
 

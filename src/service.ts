@@ -1,4 +1,4 @@
-import { isOpen, parseCommand } from './domain.js';
+import { isOpen, isSchedulable, parseCommand } from './domain.js';
 import { Store, type ResponseStatus } from './store.js';
 
 export class MealService {
@@ -11,6 +11,11 @@ export class MealService {
     if (command.type === 'help') return this.help(conversationId);
     if (command.type === 'status') return `오늘 식사 알림은 점심 ${this.store.getSchedule(conversationId, 'lunch')}, 저녁 ${this.store.getSchedule(conversationId, 'dinner')}에 보내드릴게요. 😊`;
     if (command.type === 'schedule') {
+      if (!isSchedulable(command.meal, command.time)) {
+        const meal = command.meal === 'lunch' ? '점심' : '저녁';
+        const closing = command.meal === 'lunch' ? '14:00' : '20:00';
+        return `앗, ${meal} 식사 알림은 ${closing} 전으로 설정해 주세요.\n기존 알림 시간은 그대로 유지했어요. 😊`;
+      }
       this.store.setSchedule(conversationId, command.meal, command.time, actorId, actorName);
       return `${command.meal === 'lunch' ? '점심 식사 알림을' : '저녁 식사 알림을'} ${command.time}에 보내드릴게요! ${command.meal === 'lunch' ? '🍚' : '🌙'}`;
     }

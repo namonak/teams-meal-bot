@@ -22,6 +22,12 @@ function seoulTime(now: Date): string {
   return new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now);
 }
 
+const closingTime = (meal: Meal) => meal === 'lunch' ? '14:00' : '20:00';
+
 export function isOpen(meal: Meal, now: Date): boolean {
-  return seoulTime(now) < (meal === 'lunch' ? '14:00' : '20:00');
+  return seoulTime(now) < closingTime(meal);
+}
+
+export function isSchedulable(meal: Meal, time: string): boolean {
+  return time < closingTime(meal);
 }

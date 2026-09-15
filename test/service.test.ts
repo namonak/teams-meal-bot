@@ -20,6 +20,17 @@ test('every installed chat can change its own schedule with friendly guidance', 
   assert.equal(store.listScheduleChanges().length, 2);
 });
 
+test('keeps the existing schedule when a requested time is after meal close', () => {
+  const store = Store.open(':memory:');
+  store.activateConversation('chat-1');
+  const service = new MealService(store);
+  assert.match(service.mention('chat-1', '설정 점심 14:00'), /14:00 전으로 설정해 주세요/);
+  assert.match(service.mention('chat-1', '설정 저녁 20:00'), /20:00 전으로 설정해 주세요/);
+  assert.equal(store.getSchedule('chat-1', 'lunch'), '11:15');
+  assert.equal(store.getSchedule('chat-1', 'dinner'), '17:45');
+  assert.equal(store.listScheduleChanges().length, 0);
+});
+
 test('accepts responses only in the survey conversation', () => {
   const store = Store.open(':memory:');
   store.activateConversation('chat-1');

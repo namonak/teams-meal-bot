@@ -1,4 +1,4 @@
-import type { Meal } from './domain.js';
+import { isOpen, type Meal } from './domain.js';
 
 type Schedules = Record<Meal, string>;
 
@@ -7,5 +7,5 @@ export function dueMeals(now: Date, schedules: Schedules): Meal[] {
   const value = (type: string) => parts.find((part) => part.type === type)?.value;
   if (value('weekday') === 'Sun' || value('weekday') === 'Sat') return [];
   const time = `${value('hour')}:${value('minute')}`;
-  return (['lunch', 'dinner'] as Meal[]).filter((meal) => schedules[meal] === time);
+  return (['lunch', 'dinner'] as Meal[]).filter((meal) => schedules[meal] === time && isOpen(meal, now));
 }

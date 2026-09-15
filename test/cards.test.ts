@@ -23,3 +23,8 @@ test('removes the submit action from a closed survey card', () => {
   const card = buildSurveyCard('점심', [], 1, true);
   assert.deepEqual(card.actions, []);
 });
+
+test('uses evening-specific choices for a dinner poll', () => {
+  const card = buildSurveyCard('저녁', [], 1);
+  assert.deepEqual(card.actions?.map((action: any) => action.title), ['🍽️ 같이 먹을래요', '🚪 퇴근입니다!', '🫧 조금 더 고민할게요']);
+});

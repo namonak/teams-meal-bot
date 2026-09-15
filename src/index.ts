@@ -6,6 +6,12 @@ import { dueMeals } from './scheduler.js';
 import { MealService } from './service.js';
 import { Store } from './store.js';
 
+export function cardActionResponse(accepted: boolean) {
+  return accepted
+    ? { statusCode: 200, type: 'application/vnd.microsoft.activity.message', value: '응답을 반영했어요!' }
+    : { statusCode: 400, type: 'application/vnd.microsoft.error', value: { code: 'BadRequest', message: '투표를 반영하지 못했어요. 카드를 다시 확인해 주세요.' } };
+}
+
 class MealBot extends ActivityHandler {
   constructor(private service: MealService, private store: Store) {
     super();
@@ -35,7 +41,7 @@ class MealBot extends ActivityHandler {
       const survey = this.store.getSurvey(surveyId)!;
       await context.updateActivity({ id: survey.messageId, type: 'message', conversation: context.activity.conversation, attachments: [CardFactory.adaptiveCard(buildSurveyCard(survey.meal === 'lunch' ? '점심' : '저녁', this.store.listResponses(survey.id), survey.id))] } as never);
     }
-    return { statusCode: accepted ? 200 : 400, type: 'application/vnd.microsoft.card.adaptive', value: {} };
+    return cardActionResponse(Boolean(accepted)) as never;
   }
 }
 

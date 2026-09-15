@@ -2,6 +2,7 @@ services:
   bot:
     container_name: team-meal-bot
     build: .
+    image: team-meal-bot:local
     env_file: .env
     environment:
       PORT: 3978

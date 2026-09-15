@@ -1,30 +1,30 @@
 # Team Meal Bot
 
-`밥부장`은 Teams 단체 대화방에서 식사 참여와 메뉴를 취합하는 봇입니다.
+`밥부장`은 Teams 대화방에서 식사 참여와 메뉴를 함께 모아드리는 봇입니다.
 
 ## 기능
 
-- 평일 KST 11:15에 점심, 17:45에 저녁 설문을 자동 게시합니다.
-- `🍽 같이 먹자` / `🏃 점따` / `🫧 고민 중`을 버튼으로 투표합니다.
-- 카드의 입력칸에 남긴 메뉴는 `같이 먹자`를 고른 경우에만 메뉴 픽으로 함께 집계합니다.
-- 응답할 때마다 원래 카드의 선택 인원과 메뉴 픽 집계를 갱신합니다.
-- 점심은 14:00, 저녁은 20:00에 마감되어 최종 집계만 남습니다.
-- 앱을 설치한 모든 1:1·단체 대화방에서 독립적으로 동작합니다.
+- 평일 KST 11:15에는 점심, 17:45에는 저녁 설문을 보내드립니다.
+- `🍽 같이 먹을래요` / `🏃 점따입니다!` / `🫧 조금 더 고민할게요` 중에서 골라주세요.
+- 어떤 선택을 하셨는지와 참여자 이름을 카드에서 바로 확인하실 수 있습니다.
+- 메뉴는 `같이 먹을래요`를 고르신 경우에만 메뉴 픽으로 함께 모아드립니다.
+- 응답을 바꾸시면 카드의 인원과 메뉴 집계도 바로 갱신됩니다.
+- 점심은 14:00, 저녁은 20:00에 마감되며, 앱을 설치한 대화방마다 따로 동작합니다.
 
 ## 대화방 명령
 
 | 입력 | 동작 |
 | --- | --- |
-| `@밥부장` | 사용법 표시 |
-| `@밥부장 현황` | 오늘 점심·저녁 일정 표시 |
-| `@밥부장 설정 점심 11:30` | 점심 설문 시각 변경 |
-| `@밥부장 설정 저녁 18:00` | 저녁 설문 시각 변경 |
+| `@밥부장` | 밥부장이 도와드릴 수 있는 일을 안내해 드립니다. |
+| `@밥부장 현황` | 오늘 점심·저녁 알림 시간을 알려드립니다. |
+| `@밥부장 설정 점심 11:30` | 점심 식사 알림 시간을 바꿉니다. |
+| `@밥부장 설정 저녁 18:00` | 저녁 식사 알림 시간을 바꿉니다. |
 
-각 대화방의 모든 구성원이 해당 대화방의 설문 시각을 변경할 수 있으며, 변경 이력은 SQLite에 저장됩니다. 일정·설문·응답 집계는 대화방별로 분리됩니다.
+대화방 구성원이라면 누구나 그 대화방의 알림 시간을 바꾸실 수 있습니다. 변경 이력과 설문 응답은 대화방별로 안전하게 나누어 저장됩니다.
 
 ## 서버 배포
 
-1. `cp .env.example .env` 후 Microsoft 앱 값을 채웁니다. `.env`는 절대 커밋하지 않습니다.
+1. `cp .env.example .env`를 실행한 뒤 Microsoft 앱 값을 입력해 주세요. `.env` 파일은 절대 커밋하지 마세요.
 
    | 변수 | 값 |
    | --- | --- |
@@ -33,9 +33,9 @@
    | `MicrosoftAppTenantId` | Microsoft 365 테넌트 ID |
    | `PUBLIC_BASE_URL` | `https://meal-bot.namonak.dev` |
    | `DATABASE_PATH` | Docker에서는 `/data/team-meal-bot.sqlite` |
-2. 기존 HTTPS 프록시에서 `meal-bot.namonak.dev`의 `/api/messages`와 `/healthz`를 `127.0.0.1:3978`로 전달합니다.
-3. `docker compose up -d --build`를 실행합니다.
-4. `curl https://meal-bot.namonak.dev/healthz`가 `{"ok":true}`를 반환하는지 확인합니다.
+2. HTTPS 프록시에서 `meal-bot.namonak.dev`의 `/api/messages`와 `/healthz`를 `127.0.0.1:3978`로 전달해 주세요.
+3. `docker compose up -d --build`를 실행해 주세요.
+4. `curl https://meal-bot.namonak.dev/healthz`가 `{"ok":true}`를 반환하는지 확인해 주세요.
 
 Nginx 예시는 다음과 같습니다.
 
@@ -47,7 +47,7 @@ location / {
 }
 ```
 
-부팅 시 자동 실행하려면 서버의 경로에 맞춰 `deploy/team-meal-bot.service`의 `WorkingDirectory`를 수정한 뒤 다음을 실행합니다.
+서버를 켤 때 자동으로 실행하려면 `deploy/team-meal-bot.service`의 `WorkingDirectory`를 서버 경로에 맞게 바꾼 뒤 다음 명령을 실행해 주세요.
 
 ```bash
 sudo cp deploy/team-meal-bot.service /etc/systemd/system/
@@ -58,9 +58,9 @@ sudo systemctl status team-meal-bot
 
 ## Teams 등록
 
-Teams Developer CLI로 앱 등록 시 endpoint를 `https://meal-bot.namonak.dev/api/messages`로 지정합니다. `.env`의 `MicrosoftAppId`를 채운 뒤 아래 명령으로 manifest와 PNG 아이콘 두 개만 담은 ZIP을 만듭니다. 앱 ID는 ZIP에 들어가지만, 비밀값은 들어가지 않습니다.
+Teams Developer CLI로 앱을 등록할 때 endpoint는 `https://meal-bot.namonak.dev/api/messages`로 지정해 주세요. `.env`의 `MicrosoftAppId`를 입력한 뒤 아래 명령을 실행하면 manifest와 PNG 아이콘 두 개만 담긴 ZIP이 만들어집니다. 앱 ID만 ZIP에 들어가며 비밀값은 포함되지 않습니다.
 
-프로젝트 최상단(`.env`, `appPackage` 폴더가 보이는 위치)에서 실행합니다. NAS의 `/volume1/docker/team-meal-bot` 또는 로컬 PC의 저장소 경로 모두 가능합니다.
+프로젝트 최상단(`.env`, `appPackage` 폴더가 보이는 위치)에서 실행해 주세요. NAS의 `/volume1/docker/team-meal-bot`과 로컬 PC의 저장소 경로 모두에서 가능합니다.
 
 ```bash
 cd /volume1/docker/team-meal-bot
@@ -68,7 +68,7 @@ git pull origin main
 ./scripts/package-teams-app.sh
 ```
 
-`Permission denied`가 나오면 실행 권한을 한 번 부여하거나 Bash로 실행합니다.
+`Permission denied`가 나오면 실행 권한을 한 번 부여하거나 Bash로 실행해 주세요.
 
 ```bash
 chmod +x scripts/package-teams-app.sh
@@ -76,9 +76,9 @@ chmod +x scripts/package-teams-app.sh
 bash scripts/package-teams-app.sh
 ```
 
-결과 파일은 한국 시간 기준 `dist/team-meal-bot-YYYYMMDD-HHMMSS.zip` 형식입니다. 이 ZIP을 대상 단체 대화방에 사용자 지정 앱으로 추가합니다.
+결과 파일은 한국 시간 기준 `dist/team-meal-bot-YYYYMMDD-HHMMSS.zip` 형식입니다. 이 ZIP을 사용하실 대화방에 사용자 지정 앱으로 추가해 주세요.
 
-앱을 추가한 뒤 `@밥부장`을 보내 사용법이 보이면 설치가 완료된 것입니다. 실제 계정/테넌트 비밀값은 이 저장소에 넣지 않습니다.
+앱을 추가한 뒤 `@밥부장`을 보내 안내가 보이면 설치가 완료된 것입니다. 실제 계정이나 테넌트의 비밀값은 저장소에 넣지 마세요.
 
 ## 확인 목록
 

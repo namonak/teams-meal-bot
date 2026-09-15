@@ -8,9 +8,12 @@ test('every installed chat can change its own schedule with friendly guidance', 
   store.activateConversation('chat-1');
   store.activateConversation('chat-2');
   const service = new MealService(store);
-  assert.match(service.mention('chat-1', ''), /안녕하세요, 밥부장입니다/);
+  assert.match(service.mention('chat-1', ''), /안녕하세요, 냠요정입니다/);
+  assert.match(service.mention('chat-1', ''), /🍚 점심: 11:15/);
+  assert.match(service.mention('chat-1', ''), /🌙 저녁: 17:45/);
   assert.equal(service.mention('chat-1', '설정 점심 11:30'), '점심 식사 알림을 11:30에 보내드릴게요! 🍚');
   assert.equal(service.mention('chat-2', '설정 점심 12:00'), '점심 식사 알림을 12:00에 보내드릴게요! 🍚');
+  assert.match(service.mention('chat-1', ''), /🍚 점심: 11:30/);
   assert.match(service.mention('chat-1', '알 수 없는 명령'), /앗, 제가 아직 그 말씀은 잘 모르겠어요/);
   assert.equal(store.getSchedule('chat-1', 'lunch'), '11:30');
   assert.equal(store.getSchedule('chat-2', 'lunch'), '12:00');

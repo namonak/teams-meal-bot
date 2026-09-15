@@ -19,7 +19,7 @@ class MealBot extends ActivityHandler {
       if (conversationId) {
         this.store.activateConversation(conversationId, context.activity.getConversationReference());
         context.activity.removeRecipientMention();
-        await context.sendActivity(this.service.mention(conversationId, context.activity.text ?? '', context.activity.from?.id, context.activity.from?.name));
+        await context.sendActivity({ type: 'message', text: this.service.mention(conversationId, context.activity.text ?? '', context.activity.from?.id, context.activity.from?.name), textFormat: 'markdown' } as never);
       }
       await next();
     });

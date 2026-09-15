@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
   "manifestVersion": "1.22",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "id": "{{MICROSOFT_APP_ID}}",
   "developer": { "name": "Joannes", "websiteUrl": "https://namonak.dev", "privacyUrl": "https://namonak.dev/privacy", "termsOfUseUrl": "https://namonak.dev/terms" },
-  "name": { "short": "밥부장", "full": "팀 식사 설문 봇" },
+  "name": { "short": "냠요정", "full": "팀 식사 알림 요정" },
   "icons": { "color": "color.png", "outline": "outline.png" },
   "accentColor": "#5B5FC7",
-  "description": { "short": "팀 식사 여부를 묻고 메뉴를 취합합니다.", "full": "단체 대화방에서 점심과 저녁 식사 참여 여부 및 메뉴를 취합합니다." },
+  "description": { "short": "식사 알림과 메뉴 투표를 도와드려요.", "full": "점심과 저녁 식사 알림을 보내드리고, 같이 드실 분과 메뉴를 예쁘게 모아드려요." },
   "bots": [{ "botId": "{{MICROSOFT_APP_ID}}", "scopes": ["groupChat"], "supportsFiles": false, "isNotificationOnly": false }],
   "validDomains": ["meal-bot.namonak.dev"]
 }

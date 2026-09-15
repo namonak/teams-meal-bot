@@ -1,5 +1,6 @@
 services:
   bot:
+    container_name: team-meal-bot
     build: .
     env_file: .env
     environment:

@@ -24,6 +24,8 @@ test('Teams 패키지에는 치환된 manifest와 아이콘만 담긴다', () =>
     const app = JSON.parse(manifest.stdout);
     assert.equal(app.packageName, undefined);
     assert.match(app.accentColor, /^#[0-9A-F]{6}$/i);
+    assert.equal(app.name.short, '냠요정');
+    assert.equal(app.description.short, '식사 알림과 메뉴 투표를 도와드려요.');
     assert.deepEqual(app.bots[0].scopes, ['groupChat']);
     assert.deepEqual(app.validDomains, ['meal-bot.namonak.dev']);
   } finally {

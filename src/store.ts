@@ -19,11 +19,9 @@ export class Store {
   }
   static open(path: string) { return new Store(new DatabaseSync(path)); }
   activateConversation(id: string, reference?: unknown) {
-    const added = !this.db.prepare('SELECT 1 FROM conversation WHERE teams_conversation_id=?').get(id);
     this.db.prepare(`INSERT INTO conversation (teams_conversation_id, reference_json) VALUES (?, ?)
       ON CONFLICT(teams_conversation_id) DO UPDATE SET reference_json=COALESCE(excluded.reference_json, conversation.reference_json)`).run(id, reference ? JSON.stringify(reference) : null);
     this.db.prepare('INSERT OR IGNORE INTO conversation_schedule SELECT ?, meal_type, time_kst FROM schedule').run(id);
-    return added;
   }
   conversationReferences() {
     return (this.db.prepare('SELECT teams_conversation_id AS id, reference_json AS reference FROM conversation WHERE reference_json IS NOT NULL').all() as { id: string; reference: string }[])
@@ -42,7 +40,6 @@ export class Store {
     return { id: Number(result.lastInsertRowid), conversationId, date, meal, messageId, status: 'open' as const };
   }
   updateSurveyMessage(id: number, messageId: string) { this.db.prepare('UPDATE conversation_survey SET message_id=? WHERE id=?').run(messageId, id); }
-  hasSurvey(id: number) { return Boolean(this.db.prepare('SELECT 1 FROM conversation_survey WHERE id=?').get(id)); }
   getSurvey(id: number): Survey | undefined {
     const row = this.db.prepare('SELECT id, conversation_id AS conversationId, date_kst AS date, meal_type AS meal, message_id AS messageId, status FROM conversation_survey WHERE id=?').get(id) as Survey | undefined;
     return row && { ...row };

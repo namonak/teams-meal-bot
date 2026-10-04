@@ -39,6 +39,7 @@ export class Store {
     const result = this.db.prepare('INSERT INTO conversation_survey (conversation_id, date_kst, meal_type, message_id) VALUES (?, ?, ?, ?)').run(conversationId, date, meal, messageId);
     return { id: Number(result.lastInsertRowid), conversationId, date, meal, messageId, status: 'open' as const };
   }
+  deleteSurvey(id: number) { this.db.prepare('DELETE FROM conversation_survey WHERE id=?').run(id); }
   updateSurveyMessage(id: number, messageId: string) { this.db.prepare('UPDATE conversation_survey SET message_id=? WHERE id=?').run(messageId, id); }
   getSurvey(id: number): Survey | undefined {
     const row = this.db.prepare('SELECT id, conversation_id AS conversationId, date_kst AS date, meal_type AS meal, message_id AS messageId, status FROM conversation_survey WHERE id=?').get(id) as Survey | undefined;

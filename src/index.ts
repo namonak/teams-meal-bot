@@ -12,6 +12,47 @@ export function cardActionResponse(accepted: boolean) {
     : { statusCode: 400, type: 'application/vnd.microsoft.error', value: { code: 'BadRequest', message: '투표를 반영하지 못했어요. 카드를 다시 확인해 주세요.' } };
 }
 
+export async function runScheduledTasks(adapter: Pick<CloudAdapter, 'continueConversation'>, appId: string, store: Store, now = new Date()) {
+  for (const survey of store.listOpenSurveys()) {
+    if (!isOpen(survey.meal, now)) {
+      if (!survey.messageId) {
+        store.closeSurvey(survey.id);
+        continue;
+      }
+      try {
+        const reference = store.conversationReference(survey.conversationId);
+        if (reference) await adapter.continueConversation(appId, reference, async (context) => {
+          await context.updateActivity({ id: survey.messageId, type: 'message', conversation: context.activity.conversation, attachments: [CardFactory.adaptiveCard(buildSurveyCard(survey.meal === 'lunch' ? '점심' : '저녁', store.listResponses(survey.id), survey.id, true))] } as never);
+        });
+        store.closeSurvey(survey.id);
+      } catch (error) {
+        console.error('Failed to close scheduled survey:', error);
+      }
+    }
+  }
+  for (const { id, reference } of store.conversationReferences()) {
+    for (const meal of dueMeals(now, { lunch: store.getSchedule(id, 'lunch'), dinner: store.getSchedule(id, 'dinner') })) {
+      let survey;
+      try {
+        const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(now);
+        survey = store.createSurvey(id, date, meal, '');
+      } catch {
+        continue;
+      }
+      try {
+        await adapter.continueConversation(appId, reference, async (context) => {
+          const sent = await context.sendActivity({ type: 'message', attachments: [CardFactory.adaptiveCard(buildSurveyCard(meal === 'lunch' ? '점심' : '저녁', [], survey.id))] } as never);
+          if (!sent?.id) throw new Error('Scheduled survey message has no id');
+          store.updateSurveyMessage(survey.id, sent.id);
+        });
+      } catch (error) {
+        store.deleteSurvey(survey.id);
+        console.error('Failed to send scheduled survey:', error);
+      }
+    }
+  }
+}
+
 class MealBot extends ActivityHandler {
   constructor(private service: MealService, private store: Store) {
     super();
@@ -58,29 +99,7 @@ export function createApp() {
     app.post('/api/messages', express.json(), authorizeJWT(auth), async (request, response) => {
       await adapter.process(request as never, response as never, async (context) => bot.run(context));
     });
-    setInterval(async () => {
-      for (const survey of store.listOpenSurveys()) {
-        if (!isOpen(survey.meal, new Date())) {
-          const reference = store.conversationReference(survey.conversationId);
-          if (reference) await adapter.continueConversation(appId, reference, async (context) => {
-            await context.updateActivity({ id: survey.messageId, type: 'message', conversation: context.activity.conversation, attachments: [CardFactory.adaptiveCard(buildSurveyCard(survey.meal === 'lunch' ? '점심' : '저녁', store.listResponses(survey.id), survey.id, true))] } as never);
-          });
-          store.closeSurvey(survey.id);
-        }
-      }
-      for (const { id, reference } of store.conversationReferences()) {
-        for (const meal of dueMeals(new Date(), { lunch: store.getSchedule(id, 'lunch'), dinner: store.getSchedule(id, 'dinner') })) {
-          const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
-          try {
-            const survey = store.createSurvey(id, date, meal, '');
-            await adapter.continueConversation(appId, reference, async (context) => {
-              const sent = await context.sendActivity({ type: 'message', attachments: [CardFactory.adaptiveCard(buildSurveyCard(meal === 'lunch' ? '점심' : '저녁', [], survey.id))] } as never);
-              if (sent?.id) store.updateSurveyMessage(survey.id, sent.id);
-            });
-          } catch { /* duplicate scheduler tick: SQLite uniqueness is the guard */ }
-        }
-      }
-    }, 30_000).unref();
+    setInterval(() => void runScheduledTasks(adapter, appId, store), 30_000).unref();
   }
   return app;
 }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { MealService } from '../src/service.js';
 import { Store } from '../src/store.js';
+import { buildSurveyCard } from '../src/cards.js';
 
 test('every installed chat can change its own schedule with friendly guidance', () => {
   const store = Store.open(':memory:');
@@ -48,4 +49,21 @@ test('rejects a response after the meal closing time', () => {
   const survey = store.createSurvey('chat-1', '2026-09-12', 'lunch', 'message-1');
   const service = new MealService(store);
   assert.equal(service.submit('chat-1', survey.id, 'u1', 'Kim', 'join', '국밥', new Date('2026-09-12T05:00:00Z')), false);
+});
+
+test('shows submitted menus on the updated card and replaces a previous menu', () => {
+  const store = Store.open(':memory:');
+  store.activateConversation('chat-1');
+  const survey = store.createSurvey('chat-1', '2026-10-07', 'lunch', 'message-1');
+  const service = new MealService(store);
+  const now = new Date('2026-10-07T03:00:00Z');
+
+  assert.equal(service.submit('chat-1', survey.id, 'u1', '최정', 'join', ' 국밥 ', now), true);
+  let card = buildSurveyCard('점심', store.listResponses(survey.id), survey.id);
+  assert.match(JSON.stringify(card), /오늘의 메뉴 픽: 국밥 1/);
+
+  assert.equal(service.submit('chat-1', survey.id, 'u1', '최정', 'join', '돈까스', now), true);
+  card = buildSurveyCard('점심', store.listResponses(survey.id), survey.id);
+  assert.match(JSON.stringify(card), /오늘의 메뉴 픽: 돈까스 1/);
+  assert.doesNotMatch(JSON.stringify(card), /국밥/);
 });

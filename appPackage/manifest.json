@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
   "manifestVersion": "1.22",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "id": "{{MICROSOFT_APP_ID}}",
   "developer": { "name": "Joannes", "websiteUrl": "https://namonak.dev", "privacyUrl": "https://namonak.dev/privacy", "termsOfUseUrl": "https://namonak.dev/terms" },
   "name": { "short": "냠요정", "full": "팀 식사 알림 요정" },
